@@ -221,6 +221,7 @@ namespace RainbowMage.OverlayPlugin
 
         internal const string DefaultMiniParseOverlayName = "Mini Parse";
         internal const string DefaultSpellTimerOverlayName = "Spell Timer";
+        internal const string DefaultLogOverlayName = "Log";
 
         public PluginConfig()
         {
@@ -304,11 +305,20 @@ namespace RainbowMage.OverlayPlugin
             spellTimerOverlayConfig.Size = new Size(200, 300);
             spellTimerOverlayConfig.IsVisible = true;
             spellTimerOverlayConfig.MaxFrameRate = 5;
-            miniparseOverlayConfig.Url = new Uri(Path.Combine(pluginDirectory, "resources", "spelltimer.html")).ToString(); 
+            spellTimerOverlayConfig.Url = new Uri(Path.Combine(pluginDirectory, "resources", "spelltimer.html")).ToString();
+
+            var logOverlayConfig = new LogOverlayConfig(DefaultLogOverlayName);
+            logOverlayConfig.Position = new Point(20, 520);
+            logOverlayConfig.Size = new Size(200, 300);
+            logOverlayConfig.IsVisible = true;
+            logOverlayConfig.MaxFrameRate = 5;
+            logOverlayConfig.Url = new Uri(Path.Combine(pluginDirectory, "resources", "spelltimer.html")).ToString(); 
+
 
             this.Overlays = new OverlayConfigList();
             this.Overlays.Add(miniparseOverlayConfig);
             this.Overlays.Add(spellTimerOverlayConfig);
+            this.Overlays.Add(logOverlayConfig);
         }
 
         /// <summary>
