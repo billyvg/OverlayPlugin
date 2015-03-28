@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Xilium.CefGlue;
 
 namespace RainbowMage.OverlayPlugin
 {
@@ -14,6 +16,7 @@ namespace RainbowMage.OverlayPlugin
     {
         private KeyboardHook hook = new KeyboardHook();
         protected System.Timers.Timer timer;
+        protected System.Timers.Timer xivWindowTimer;
 
         /// <summary>
         /// オーバーレイがログを出力したときに発生します。
@@ -35,6 +38,11 @@ namespace RainbowMage.OverlayPlugin
         /// </summary>
         public TConfig Config { get; private set; }
 
+        /// <summary>
+        /// プラグインの設定を取得します。
+        /// </summary>
+        public IPluginConfig PluginConfig { get; set; }
+
         protected OverlayBase(TConfig config, string name)
         {
             this.Config = config;
@@ -51,6 +59,7 @@ namespace RainbowMage.OverlayPlugin
         public void Start()
         {
             timer.Start();
+            xivWindowTimer.Start();
         }
 
         /// <summary>
@@ -59,6 +68,7 @@ namespace RainbowMage.OverlayPlugin
         public void Stop()
         {
             timer.Stop();
+            xivWindowTimer.Stop();
         }
 
         /// <summary>
@@ -104,6 +114,7 @@ namespace RainbowMage.OverlayPlugin
                 this.Overlay.Renderer.BrowserLoad += (o, e) =>
                 {
                     Log(LogLevel.Debug, "BrowserLoad: {0}: {1}", e.HttpStatusCode, e.Url);
+                    NotifyOverlayState();
                 };
                 this.Overlay.Renderer.BrowserConsoleLog += (o, e) =>
                 {
@@ -113,8 +124,13 @@ namespace RainbowMage.OverlayPlugin
                 {
                     Navigate(e.NewUrl);
                 };
+                this.Config.LockChanged += (o, e) =>
+                {
+                    this.Overlay.Locked = e.IsLocked;
+                    NotifyOverlayState();
+                };
 
-                if (!CheckUrl(this.Config.Url))
+                if (CheckUrl(this.Config.Url))
                 {
                     Navigate(this.Config.Url);
                 }
@@ -209,6 +225,36 @@ namespace RainbowMage.OverlayPlugin
                     Log(LogLevel.Error, "Update: {0}", ex.ToString());
                 }
             };
+
+            xivWindowTimer = new System.Timers.Timer();
+            xivWindowTimer.Interval = 1000;
+            xivWindowTimer.Elapsed += (o, e) =>
+            {
+                try
+                {
+                    if (Config.IsVisible && PluginConfig.HideOverlaysWhenNotActive)
+                    {
+                        uint pid;
+                        var hWndFg = NativeMethods.GetForegroundWindow();
+                        NativeMethods.GetWindowThreadProcessId(hWndFg, out pid);
+                        var exePath = Process.GetProcessById((int)pid).MainModule.FileName;
+
+                        if (Path.GetFileName(exePath.ToString()) == "ffxiv.exe" ||
+                            exePath.ToString() == Process.GetCurrentProcess().MainModule.FileName)
+                        {
+                            this.Overlay.Visible = true;
+                        }
+                        else
+                        {
+                            this.Overlay.Visible = false;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log(LogLevel.Error, "XivWindowWatcher: {0}", ex.ToString());
+                }
+            };
         }
 
         /// <summary>
@@ -261,14 +307,7 @@ namespace RainbowMage.OverlayPlugin
 
         public virtual void Navigate(string url)
         {
-            if (this.Overlay.Url != url)
-            {
                 this.Overlay.Url = url;
-            }
-            else
-            {
-                this.Overlay.Reload();
-            }
         }
 
         protected void Log(LogLevel level, string message)
@@ -289,6 +328,38 @@ namespace RainbowMage.OverlayPlugin
         {
             this.Config.Position = this.Overlay.Location;
             this.Config.Size = this.Overlay.Size;
+        }
+
+        private void NotifyOverlayState()
+        {
+            var updateScript = string.Format(
+                "document.dispatchEvent(new CustomEvent('onOverlayStateUpdate', {{ detail: {{ isLocked: {0} }} }}));",
+                this.Config.IsLocked ? "true" : "false");
+
+            if (this.Overlay != null &&
+                this.Overlay.Renderer != null &&
+                this.Overlay.Renderer.Browser != null)
+            {
+                this.Overlay.Renderer.Browser.GetMainFrame().ExecuteJavaScript(updateScript, null, 0);
+            }
+        }
+
+        public void SendMessage(string message)
+        {
+            var script = string.Format(
+                "document.dispatchEvent(new CustomEvent('onBroadcastMessageReceive', {{ detail: {{ message: \"{0}\" }} }}));",
+                Util.CreateJsonSafeString(message));
+
+            if (this.Overlay != null &&
+                this.Overlay.Renderer != null &&
+                this.Overlay.Renderer.Browser != null)
+            {
+                foreach (var frameId in this.Overlay.Renderer.Browser.GetFrameIdentifiers())
+                {
+                    var frame = this.Overlay.Renderer.Browser.GetFrame(frameId);
+                    frame.ExecuteJavaScript(script, null, 0);
+                }
+            }
         }
     }
 }

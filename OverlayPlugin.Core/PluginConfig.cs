@@ -1,4 +1,4 @@
-﻿using RainbowMage.OverlayPlugin.Overlays;
+using RainbowMage.OverlayPlugin.Overlays;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -12,7 +12,7 @@ using System.Xml.Serialization;
 namespace RainbowMage.OverlayPlugin
 {
     [Serializable]
-    public class PluginConfig
+    public class PluginConfig : IPluginConfig
     {
         #region Config for version 0.1.2.0 or below
 #pragma warning disable 612, 618
@@ -177,6 +177,9 @@ namespace RainbowMage.OverlayPlugin
         [XmlElement("FollowLatestLog")]
         public bool FollowLatestLog { get; set; }
 
+        [XmlElement("HideOverlaysWhenNotActive")]
+        public bool HideOverlaysWhenNotActive { get; set; }
+
         /// <summary>
         /// 設定ファイルを生成したプラグインのバージョンを取得または設定します。
         /// 設定が新規に作成された場合、またはバージョン0.3未満では null が設定されます。
@@ -240,6 +243,7 @@ namespace RainbowMage.OverlayPlugin
             this.Overlays = new OverlayConfigList();
 
             this.FollowLatestLog = false;
+            this.HideOverlaysWhenNotActive = false;
             this.IsFirstLaunch = true;
         }
 
@@ -305,7 +309,7 @@ namespace RainbowMage.OverlayPlugin
             spellTimerOverlayConfig.Size = new Size(200, 300);
             spellTimerOverlayConfig.IsVisible = true;
             spellTimerOverlayConfig.MaxFrameRate = 5;
-            spellTimerOverlayConfig.Url = new Uri(Path.Combine(pluginDirectory, "resources", "spelltimer.html")).ToString();
+            spellTimerOverlayConfig.Url = new Uri(Path.Combine(pluginDirectory, "resources", "spelltimer.html")).ToString(); 
 
             var logOverlayConfig = new LogOverlayConfig(DefaultLogOverlayName);
             logOverlayConfig.Position = new Point(20, 520);
@@ -313,7 +317,6 @@ namespace RainbowMage.OverlayPlugin
             logOverlayConfig.IsVisible = true;
             logOverlayConfig.MaxFrameRate = 5;
             logOverlayConfig.Url = new Uri(Path.Combine(pluginDirectory, "resources", "spelltimer.html")).ToString(); 
-
 
             this.Overlays = new OverlayConfigList();
             this.Overlays.Add(miniparseOverlayConfig);

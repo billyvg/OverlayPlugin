@@ -14,8 +14,17 @@ namespace RainbowMage.HtmlRenderer
         public event EventHandler<BrowserLoadEventArgs> BrowserLoad;
         public event EventHandler<BrowserConsoleLogEventArgs> BrowserConsoleLog;
 
+        public static event EventHandler<BroadcastMessageEventArgs> BroadcastMessage;
+        public static event EventHandler<SendMessageEventArgs> SendMessage;
+
         public CefBrowser Browser { get; private set; }
         private Client Client { get; set; }
+
+        private int clickCount;
+        private CefMouseButtonType lastClickButton;
+        private DateTime lastClickTime;
+        private int lastClickPosX;
+        private int lastClickPosY;
 
         public Renderer()
         {
@@ -73,6 +82,113 @@ namespace RainbowMage.HtmlRenderer
             }
         }
 
+        public void SendMouseMove(int x, int y, CefMouseButtonType button)
+        {
+            if (this.Browser != null)
+            {
+                var host = this.Browser.GetHost();
+                var mouseEvent = new CefMouseEvent { X = x, Y = y };
+                if (button == CefMouseButtonType.Left)
+                {
+                    mouseEvent.Modifiers = CefEventFlags.LeftMouseButton;
+                }
+                else if (button == CefMouseButtonType.Middle)
+                {
+                    mouseEvent.Modifiers = CefEventFlags.MiddleMouseButton;
+                }
+                else if (button == CefMouseButtonType.Right)
+                {
+                    mouseEvent.Modifiers = CefEventFlags.RightMouseButton;
+                }
+
+                host.SendMouseMoveEvent(mouseEvent, false);
+            }
+        }
+
+        public void SendMouseUpDown(int x, int y, CefMouseButtonType button, bool isMouseUp)
+        {
+            if (this.Browser != null)
+            {
+                var host = this.Browser.GetHost();
+
+                if (!isMouseUp)
+                {
+                    if (IsContinuousClick(x, y, button))
+                    {
+                        clickCount++;
+                    }
+                    else
+                    {
+                        clickCount = 1;
+                    }
+                }
+
+                var mouseEvent = new CefMouseEvent { X = x, Y = y };
+                host.SendMouseClickEvent(mouseEvent, button, isMouseUp, clickCount);
+
+                lastClickPosX = x;
+                lastClickPosY = y;
+                lastClickButton = button;
+                lastClickTime = DateTime.Now;
+            }
+        }
+
+        public void SendMouseWheel(int x, int y, int delta, bool isVertical)
+        {
+            if (this.Browser != null)
+            {
+                var host = this.Browser.GetHost();
+                var mouseEvent = new CefMouseEvent { X = x, Y = y };
+                host.SendMouseWheelEvent(mouseEvent, isVertical ? delta : 0, !isVertical ? delta : 0);
+            }
+        }
+
+        public void SendActivate()
+        {
+            if (this.Browser != null)
+            {
+                var host = this.Browser.GetHost();
+                host.SendFocusEvent(true);
+            }
+        }
+
+        public void SendDeactivate()
+        {
+            if (this.Browser != null)
+            {
+                var host = this.Browser.GetHost();
+                host.SendFocusEvent(false);
+            }
+        }
+
+        private bool IsContinuousClick(int x, int y, CefMouseButtonType button)
+        {
+            // ダブルクリックとして認識するクリックの間隔よりも大きかった場合は継続的なクリックとみなさない
+            var delta = (DateTime.Now - lastClickTime).TotalMilliseconds;
+            if (delta > System.Windows.Forms.SystemInformation.DoubleClickTime)
+            {
+                return false;
+            }
+
+            // クリック位置が違う、もしくはボタンが違う場合にも継続的なクリックとはみなさない
+            if (lastClickPosX != x || lastClickPosY != y || lastClickButton != button)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public void SendKeyEvent(CefKeyEvent keyEvent)
+        {
+            if (this.Browser != null)
+            {
+                var host = this.Browser.GetHost();
+
+                host.SendKeyEvent(keyEvent);
+            }
+        }
+
         internal void OnCreated(CefBrowser browser)
         {
             this.Browser = browser;
@@ -107,6 +223,22 @@ namespace RainbowMage.HtmlRenderer
             if (BrowserConsoleLog != null)
             {
                 BrowserConsoleLog(this, new BrowserConsoleLogEventArgs(message, source, line));
+            }
+        }
+
+        internal static void OnBroadcastMessage(object sender, BroadcastMessageEventArgs e)
+        {
+            if (BroadcastMessage != null)
+            {
+                BroadcastMessage(sender, e);
+            }
+        }
+
+        internal static void OnSendMessage(object sender, SendMessageEventArgs e)
+        {
+            if (SendMessage != null)
+            {
+                SendMessage(sender, e);
             }
         }
 

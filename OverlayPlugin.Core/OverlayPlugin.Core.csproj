@@ -60,7 +60,6 @@
     </Compile>
     <Compile Include="DIBitmap.cs" />
     <Compile Include="KeyboardHook.cs" />
-    <Compile Include="OverlayConfigList.cs" />
     <Compile Include="Overlays\LogConfigPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -68,6 +67,15 @@
     <Compile Include="Overlays\LogOverlay.cs" />
     <Compile Include="Overlays\LogOverlayAddon.cs" />
     <Compile Include="Overlays\LogOverlayConfig.cs" />
+    <Compile Include="Overlays\LabelOverlay.cs" />
+    <Compile Include="Overlays\LabelOverlayAddon.cs" />
+    <Compile Include="Overlays\LabelOverlayConfig.cs" />
+    <Compile Include="Overlays\LabelOverlayConfigPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Overlays\LabelOverlayConfigPanel.Designer.cs">
+      <DependentUpon>LabelOverlayConfigPanel.cs</DependentUpon>
+    </Compile>
     <Compile Include="Overlays\MiniParseConfigPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -114,6 +122,9 @@
     <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="resources\label.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="resources\miniparse.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -137,8 +148,17 @@
     <EmbeddedResource Include="NewOverlayDialog.ja-JP.resx">
       <DependentUpon>NewOverlayDialog.cs</DependentUpon>
     </EmbeddedResource>
+<<<<<<< HEAD
     <EmbeddedResource Include="Overlays\LogConfigPanel.ja-JP.resx" />
     <EmbeddedResource Include="Overlays\LogConfigPanel.resx" />
+=======
+    <EmbeddedResource Include="Overlays\LabelOverlayConfigPanel.ja-JP.resx">
+      <DependentUpon>LabelOverlayConfigPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Overlays\LabelOverlayConfigPanel.resx">
+      <DependentUpon>LabelOverlayConfigPanel.cs</DependentUpon>
+    </EmbeddedResource>
+>>>>>>> RainbowMage/master
     <EmbeddedResource Include="Overlays\MiniParseConfigPanel.ja-JP.resx">
       <DependentUpon>MiniParseConfigPanel.cs</DependentUpon>
     </EmbeddedResource>

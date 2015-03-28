@@ -10,31 +10,32 @@ using System.Windows.Forms;
 
 namespace RainbowMage.OverlayPlugin.Overlays
 {
-    public partial class SpellTimerConfigPanel : UserControl
+    public partial class LabelOverlayConfigPanel : UserControl
     {
-        private SpellTimerOverlay overlay;
-        private SpellTimerOverlayConfig config;
+        private LabelOverlayConfig config;
+        private LabelOverlay overlay;
 
-        public SpellTimerConfigPanel(SpellTimerOverlay overlay)
+        public LabelOverlayConfigPanel(LabelOverlay overlay)
         {
             InitializeComponent();
 
             this.overlay = overlay;
             this.config = overlay.Config;
 
-            SetupConfigEventHandlers();
             SetupControlProperties();
+            SetupConfigEventHandlers();
         }
 
         private void SetupControlProperties()
         {
-            this.checkBoxVisible.Checked = this.config.IsVisible;
-            this.checkBoxClickThru.Checked = this.config.IsClickThru;
-            this.textBoxUrl.Text = this.config.Url;
-            this.nudMaxFrameRate.Value = this.config.MaxFrameRate;
+            this.checkMiniParseVisible.Checked = config.IsVisible;
+            this.checkMiniParseClickthru.Checked = config.IsClickThru;
+            this.textUrl.Text = config.Url;
             this.checkEnableGlobalHotkey.Checked = config.GlobalHotkeyEnabled;
             this.textGlobalHotkey.Enabled = this.checkEnableGlobalHotkey.Checked;
             this.textGlobalHotkey.Text = Util.GetHotkeyString(config.GlobalHotkeyModifiers, config.GlobalHotkey);
+            this.textBox.Text = config.Text;
+            this.checkHTML.Checked = config.HtmlModeEnabled;
         }
 
         private void SetupConfigEventHandlers()
@@ -43,28 +44,21 @@ namespace RainbowMage.OverlayPlugin.Overlays
             {
                 this.InvokeIfRequired(() =>
                 {
-                    this.checkBoxVisible.Checked = e.IsVisible;
+                    this.checkMiniParseVisible.Checked = e.IsVisible;
                 });
             };
             this.config.ClickThruChanged += (o, e) =>
             {
                 this.InvokeIfRequired(() =>
                 {
-                    this.checkBoxClickThru.Checked = e.IsClickThru;
+                    this.checkMiniParseClickthru.Checked = e.IsClickThru;
                 });
             };
             this.config.UrlChanged += (o, e) =>
             {
                 this.InvokeIfRequired(() =>
                 {
-                    this.textBoxUrl.Text = e.NewUrl;
-                });
-            };
-            this.config.MaxFrameRateChanged += (o, e) =>
-            {
-                this.InvokeIfRequired(() =>
-                {
-                    this.nudMaxFrameRate.Value = e.NewFrameRate;
+                    this.textUrl.Text = e.NewUrl;
                 });
             };
             this.config.GlobalHotkeyEnabledChanged += (o, e) =>
@@ -96,6 +90,20 @@ namespace RainbowMage.OverlayPlugin.Overlays
                     this.checkLock.Checked = e.IsLocked;
                 });
             };
+            this.config.TextChanged += (o, e) =>
+            {
+                this.InvokeIfRequired(() =>
+                {
+                    this.textBox.Text = e.Text;
+                });
+            };
+            this.config.HTMLModeChanged += (o, e) =>
+            {
+                this.InvokeIfRequired(() =>
+                {
+                    this.checkHTML.Checked = e.NewState;
+                });
+            };
         }
 
         private void InvokeIfRequired(Action action)
@@ -110,24 +118,57 @@ namespace RainbowMage.OverlayPlugin.Overlays
             }
         }
 
-        private void checkBoxVisible_CheckedChanged(object sender, EventArgs e)
+        private void checkWindowVisible_CheckedChanged(object sender, EventArgs e)
         {
-            this.config.IsVisible = this.checkBoxVisible.Checked;
+            this.config.IsVisible = checkMiniParseVisible.Checked;
         }
 
-        private void checkBoxClickThru_CheckedChanged(object sender, EventArgs e)
+        private void checkMouseClickthru_CheckedChanged(object sender, EventArgs e)
         {
-            this.config.IsClickThru = this.checkBoxClickThru.Checked;
+            this.config.IsClickThru = checkMiniParseClickthru.Checked;
         }
 
-        private void textBoxUrl_TextChanged(object sender, EventArgs e)
+        private void textUrl_TextChanged(object sender, EventArgs e)
         {
-            //this.config.Url = this.textBoxUrl.Text;
+            //this.config.Url = textMiniParseUrl.Text;
         }
 
-        private void textBoxUrl_Leave(object sender, EventArgs e)
+        private void buttonReloadBrowser_Click(object sender, EventArgs e)
         {
-            this.config.Url = this.textBoxUrl.Text;
+            this.overlay.Navigate(this.config.Url);
+        }
+
+        private void buttonCopyActXiv_Click(object sender, EventArgs e)
+        {
+            var json = overlay.CreateJson();
+            if (!string.IsNullOrWhiteSpace(json))
+            {
+                Clipboard.SetText(json);
+            }
+        }
+
+        private void checkBoxEnableGlobalHotkey_CheckedChanged(object sender, EventArgs e)
+        {
+            this.config.GlobalHotkeyEnabled = this.checkEnableGlobalHotkey.Checked;
+            this.textGlobalHotkey.Enabled = this.config.GlobalHotkeyEnabled;
+        }
+
+        private void textBoxGlobalHotkey_KeyDown(object sender, KeyEventArgs e)
+        {
+            e.SuppressKeyPress = true;
+            var key = Util.RemoveModifiers(e.KeyCode, e.Modifiers);
+            this.config.GlobalHotkey = key;
+            this.config.GlobalHotkeyModifiers = e.Modifiers;
+        }
+
+        private void checkLock_CheckedChanged(object sender, EventArgs e)
+        {
+            this.config.IsLocked = this.checkLock.Checked;
+        }
+
+        private void checkHTML_CheckedChanged(object sender, EventArgs e)
+        {
+            this.config.HtmlModeEnabled = checkHTML.Checked;
         }
 
         private void buttonSelectFile_Click(object sender, EventArgs e)
@@ -140,42 +181,14 @@ namespace RainbowMage.OverlayPlugin.Overlays
             }
         }
 
-        private void buttonCopyVariable_Click(object sender, EventArgs e)
+        private void textUrl_Leave(object sender, EventArgs e)
         {
-            var json = this.overlay.CreateJsonData();
-            if (!string.IsNullOrWhiteSpace(json))
-            {
-                Clipboard.SetText("var ActXiv = " + json + ";");
-            }
+            this.config.Url = textUrl.Text;
         }
 
-        private void buttonSpellTimerReloadBrowser_Click(object sender, EventArgs e)
+        private void textBox_TextChanged(object sender, EventArgs e)
         {
-            this.overlay.Navigate(this.config.Url);
-        }
-
-        private void nudMaxFrameRate_ValueChanged(object sender, EventArgs e)
-        {
-            this.config.MaxFrameRate = (int)nudMaxFrameRate.Value;
-        }
-
-        private void checkEnableGlobalHotkey_CheckedChanged(object sender, EventArgs e)
-        {
-            this.config.GlobalHotkeyEnabled = this.checkEnableGlobalHotkey.Checked;
-            this.textGlobalHotkey.Enabled = this.config.GlobalHotkeyEnabled;
-        }
-
-        private void textGlobalHotkey_KeyDown(object sender, KeyEventArgs e)
-        {
-            e.SuppressKeyPress = true;
-            var key = Util.RemoveModifiers(e.KeyCode, e.Modifiers);
-            this.config.GlobalHotkey = key;
-            this.config.GlobalHotkeyModifiers = e.Modifiers;
-        }
-
-        private void checkLock_CheckedChanged(object sender, EventArgs e)
-        {
-            this.config.IsLocked = this.checkLock.Checked;
+            this.config.Text = textBox.Text;
         }
     }
 }

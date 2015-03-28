@@ -117,32 +117,14 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="label6.Text" xml:space="preserve">
-    <value>最大フレームレート</value>
-  </data>
-  <data name="label5.Text" xml:space="preserve">
-    <value>ソートタイプ</value>
-  </data>
-  <data name="label4.Text" xml:space="preserve">
-    <value>ソートキー</value>
+  <data name="label1.Text" xml:space="preserve">
+    <value>表示するテキスト</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>クリックを透過させる</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
     <value>オーバーレイを表示する</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>表示するURL</value>
-  </data>
-  <data name="buttonMiniParseReloadBrowser.Text" xml:space="preserve">
-    <value>オーバーレイの表示をリロード</value>
-  </data>
-  <data name="buttonMiniParseCopyActXiv.Text" xml:space="preserve">
-    <value>変数をクリップボードにコピー</value>
-  </data>
-  <data name="label13.Text" xml:space="preserve">
-    <value>※最大フレームレート、およびホットキーの変更を有効にするためにはプラグインの再起動が必要です</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
     <value>グローバルホットキーを使用</value>
@@ -159,6 +141,21 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="checkLock.Size" type="System.Drawing.Size, System.Drawing">
-    <value>443, 16</value>
+    <value>403, 16</value>
+  </data>
+  <data name="label13.Text" xml:space="preserve">
+    <value>※ホットキーの変更を有効にするためにはプラグインの再起動が必要です</value>
+  </data>
+  <data name="buttonReloadBrowser.Text" xml:space="preserve">
+    <value>オーバーレイの表示をリロード</value>
+  </data>
+  <data name="buttonCopyUpdateScript.Text" xml:space="preserve">
+    <value>変数をクリップボードにコピー</value>
+  </data>
+  <data name="label4.Text" xml:space="preserve">
+    <value>表示するURL</value>
+  </data>
+  <data name="label5.Text" xml:space="preserve">
+    <value>テキストをHTMLとして表示</value>
   </data>
 </root>
