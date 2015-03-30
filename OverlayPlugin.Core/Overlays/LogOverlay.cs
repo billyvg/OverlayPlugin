@@ -15,64 +15,32 @@ namespace RainbowMage.OverlayPlugin.Overlays
         static DataContractJsonSerializer jsonSerializer =
             new DataContractJsonSerializer(typeof(List<SerializableTimerFrameEntry>));
 
-        IList<SerializableTimerFrameEntry> activatedTimers;
-
         public LogOverlay(LogOverlayConfig config)
             : base(config, config.Name)
         {
-            this.activatedTimers = new List<SerializableTimerFrameEntry>();
-
-            ActGlobals.oFormActMain.OnLogLineRead += (test, test2) =>
-                {
-
-                };
-            ActGlobals.oFormSpellTimers.OnSpellTimerNotify += (t) =>
+            ActGlobals.oFormActMain.OnLogLineRead += (isImport, logInfo) =>
             {
-                /*
-                lock (this.activatedTimers)
+                /* logInfo: detectedTime, detectedType, detectedZone, inCombat, logLin */
+                var importStr = "false";
+                if (isImport)
                 {
-                    var timerFrame = activatedTimers.Where(x => x.Original == t).FirstOrDefault();
-                    if (timerFrame == null)
-                    {
-                        timerFrame = new SerializableTimerFrameEntry(t);
-                        this.activatedTimers.Add(timerFrame);
-                    }
-                    else
-                    {
-                        timerFrame.Update(t);
-                    }
-                    foreach (var Log in t.Logs)
-                    {
-                        var timer = timerFrame.Logs.Where(x => x.Original == Log).FirstOrDefault();
-                        if (timer == null)
-                        {
-                            timer = new SerializableLogEntry(Log);
-                            timerFrame.Logs.Add(timer);
-                        }
-                    }
+                    importStr = "true";
                 }
-                 */
-            };
-        }
 
-        protected override void Update()
-        {
-            try
-            {
-                var updateScript = CreateEventDispatcherScript();
+                var updateScript = "document.dispatchEvent(new CustomEvent('onOverlayLogUpdate', { detail: {isImport: " + importStr + ", logInfo: {timestamp: '" + logInfo.detectedTime + "', logLine: '" + Util.CreateJsonSafeString(logInfo.logLine) + "'}}}));";
 
                 if (this.Overlay != null &&
                     this.Overlay.Renderer != null &&
                     this.Overlay.Renderer.Browser != null)
                 {
-                    this.Overlay.Renderer.Browser.GetMainFrame().ExecuteJavaScript(updateScript, null, 0);
+                    this.Overlay.Renderer.Browser.GetMainFrame().ExecuteJavaScript(updateScript, null, 1);
                 }
+            };
+        }
 
-            }
-            catch (Exception ex)
-            {
-                Log(LogLevel.Error, "Update: {1}", this.Name, ex);
-            }
+        protected override void Update()
+        {
+           
         }
 
         private void RemoveExpiredEntries()
@@ -82,36 +50,12 @@ namespace RainbowMage.OverlayPlugin.Overlays
 
         internal string CreateJsonData()
         {
-            lock (this.activatedTimers)
-            {
-                RemoveExpiredEntries();
-            }
-
-            using (var ms = new MemoryStream())
-            {
-                lock (this.activatedTimers)
-                {
-                    RemoveExpiredEntries();
-                    jsonSerializer.WriteObject(ms, activatedTimers);
-                }
-
-                var result = Encoding.UTF8.GetString(ms.ToArray());
-
-                if (!string.IsNullOrWhiteSpace(result))
-                {
-                    return string.Format("{0}{1}{2}", "{ timerFrames: ", result, "}");
-                }
-                else
-                {
-                    return "";
-                }
-            }
+            return "";
         }
 
         private string CreateEventDispatcherScript()
         {
-            return "var ActXiv = " + this.CreateJsonData() + ";\n" +
-                   "document.dispatchEvent(new CustomEvent('onOverlayDataUpdate', ActXiv));";
+            return "";
         }
     }
 }
