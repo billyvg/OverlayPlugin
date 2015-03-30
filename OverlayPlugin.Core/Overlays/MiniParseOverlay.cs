@@ -23,12 +23,7 @@ namespace RainbowMage.OverlayPlugin.Overlays
         public MiniParseOverlay(MiniParseOverlayConfig config)
             : base(config, config.Name)
         {
-            ActGlobals.oFormActMain.OnLogLineRead += (test, test2) =>
-            {
-                //new Logger();
-                Log(LogLevel.Debug, "OnLogLineRead: {0}, {1}", test, test2);
 
-            };
         }
 
         public override void Navigate(string url)
